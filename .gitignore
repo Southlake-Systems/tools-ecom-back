@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# Static files (if collected)
+staticfiles/
+
+# Environment variables
+.env
+.env.*
+
+# IDEs / Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# uv (package manager)
+uv.lock
+
+# Testing / coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Migrations (optional - usually keep them)
+# product/migrations/*
+# !product/migrations/__init__.py
+
+# Logs
+*.log
+
+# Docker (if you add later)
+*.pid
+*.seed
+*.pid.lock
+
+# Misc
+*.bak
+*.tmp
