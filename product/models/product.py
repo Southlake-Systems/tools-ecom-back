@@ -1,11 +1,12 @@
 from django.db import models
 
+from .brands import Brand
 # Create your models here.
 
 class Product(models.Model):
     id = models.CharField(max_length=100,primary_key=True)
     name = models.CharField(max_length=300)
-    brand = models.CharField(max_length=100)
+    brand = models.ForeignKey(Brand,on_delete=models.CASCADE,related_name="products") 
     description = models.TextField(max_length=300)
     model_number = models.CharField(max_length=200)
     stock = models.IntegerField(default=0)
