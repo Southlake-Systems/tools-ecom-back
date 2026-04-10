@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Prefetch
 
-from ..models import Product, ProductImage, ProductPrice
+from ..models.product import Product, ProductImage, ProductPrice
 from ..serializers.home_page import HomeProductSerializer
 
 

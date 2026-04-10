@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, Specifications, Features, ProductPrice, ProductImage
+from .models.product import Product, Specifications, Features, ProductPrice, ProductImage
 
 
 # Inline for Specifications

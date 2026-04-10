@@ -5,7 +5,7 @@ import pandas as pd
 import random
 import string
 
-from ..models import Product, Specifications
+from ..models.product import Product, Specifications
 
 
 def clean(value):
