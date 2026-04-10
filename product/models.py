@@ -9,20 +9,23 @@ class Product(models.Model):
     description = models.TextField(max_length=300)
     model_number = models.CharField(max_length=200)
     stock = models.IntegerField(default=0)
+    category = models.CharField(max_length=100,default="nill")
+    warranty = models.CharField(max_length=10,default=0)
 
     def __str__(self):
         return self.name
 
 
 class Specifications(models.Model):
-    Product = models.ForeignKey( Product, on_delete=models.CASCADE,related_name="specification")
+    product = models.ForeignKey( Product, on_delete=models.CASCADE,related_name="specification")
     name = models.CharField(max_length=200)
+    spec = models.CharField(max_length=200,default="NILL")
     def __str__(self):
         return self.name
     
 
 class Features(models.Model):
-    Product = models.ForeignKey( Product, on_delete=models.CASCADE,related_name="features")
+    product = models.ForeignKey( Product, on_delete=models.CASCADE,related_name="features")
     name = models.CharField(max_length=200)
     def __str__(self):
         return self.name
