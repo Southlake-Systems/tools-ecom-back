@@ -6,6 +6,7 @@ import random
 import string
 
 from ..models.product import Product, Specifications
+from ..models.brands import Brand
 
 
 def clean(value):
@@ -60,7 +61,11 @@ class BulkProductUpload(APIView):
                     for excel_col, model_field in PRODUCT_FIELD_MAP.items():
                         value = clean(row.get(excel_col))
                         if value is not None:
-                            product_data[model_field] = value
+                            if model_field == "brand":
+                                brand_obj, _ = Brand.objects.get_or_create(name=value)
+                                product_data["brand"] = brand_obj
+                            else:
+                                product_data[model_field] = value
 
                     if not product_data.get("name"):
                         raise Exception("Missing product name")
