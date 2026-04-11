@@ -1,6 +1,6 @@
 from django.db import models
 
-from .brands import Brand
+from brands.models import Brand
 # Create your models here.
 
 class Product(models.Model):

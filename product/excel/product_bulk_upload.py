@@ -6,7 +6,7 @@ import random
 import string
 
 from ..models.product import Product, Specifications
-from ..models.brands import Brand
+from brands.models import Brand
 
 
 def clean(value):

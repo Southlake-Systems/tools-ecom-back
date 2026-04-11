@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from ..models.product import Product, ProductPrice, ProductImage
-from ..models.brands import Brand
+from brands.models import Brand
 
 
 class ProductPriceSerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class HomeProductSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "brand",
-            "price",
+            "price", 
             "image",
         ]
 

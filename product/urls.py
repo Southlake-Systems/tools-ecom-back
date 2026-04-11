@@ -9,6 +9,7 @@ urlpatterns = [
     path('get/id',GetProdID.as_view(), name="get product id"),
     path('bulk-upload/',BulkProductUpload.as_view(), name="bulk-upload"),
     path('get/all',HomePageView.as_view(), name="home-page-view"),
+    
 
 
 ]
