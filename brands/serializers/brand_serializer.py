@@ -12,3 +12,5 @@ class BrandSerializers(serializers.ModelSerializer):
         fields = '__all__'
 
 
+    def create(self,validated_data):
+        return Brand.objects.create(**validated_data)
