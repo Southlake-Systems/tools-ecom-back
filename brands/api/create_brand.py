@@ -1,26 +1,21 @@
 
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 from ..serializers.brand_serializer import BrandSerializers
 
 class CreateNewBrand(APIView):
+    parser_classes = [MultiPartParser, FormParser]
 
-    def post(self,request):
-
-        data = request.data.get('brand')
-        if not data:
-            return Response(
-                {"error": "payload is empty"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        serializer = BrandSerializers(data=data)
+    def post(self, request):
+        serializer = BrandSerializers(data=request.data)
 
         if serializer.is_valid():
             brand = serializer.save()
             return Response({
                 "message": "created brand",
                 "brand_id": brand.id
-            }, status=status.HTTP_200_OK)
+            }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

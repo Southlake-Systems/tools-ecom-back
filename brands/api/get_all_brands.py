@@ -10,7 +10,7 @@ class GetAllBrands(APIView):
     def get(self,request):
 
         brand_obj = Brand.objects.all()
-        serializers = BrandSerializers(brand_obj, many=True)
+        serializers = BrandSerializers(brand_obj, many=True,context={"request": request} )
         return(
             Response({
                 "response" : serializers.data

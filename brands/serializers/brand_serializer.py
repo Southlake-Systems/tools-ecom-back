@@ -14,3 +14,9 @@ class BrandSerializers(serializers.ModelSerializer):
 
     def create(self,validated_data):
         return Brand.objects.create(**validated_data)
+    
+    def get_image(self, obj):
+        request = self.context.get("request")
+        if obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        return None

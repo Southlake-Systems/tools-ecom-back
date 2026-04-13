@@ -25,10 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG") == "True"
-
+USE_S3 = os.getenv("USE_S3", "False") == "True"
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
+
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
