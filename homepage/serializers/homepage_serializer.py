@@ -24,3 +24,6 @@ class HomeSectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeSection
         fields = ["id", "title", "order", "products"]
+    
+
+

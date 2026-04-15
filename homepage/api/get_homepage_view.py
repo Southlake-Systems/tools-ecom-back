@@ -10,3 +10,4 @@ class HomePageView(APIView):
         sections = HomeSection.objects.all().order_by("order")
         serializer = HomeSectionSerializer(sections, many=True)
         return Response(serializer.data)
+    
