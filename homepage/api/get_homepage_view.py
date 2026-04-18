@@ -7,7 +7,14 @@ from ..serializers.homepage_serializer import HomeSectionSerializer
 class HomePageView(APIView):
 
     def get(self, request):
+        count = int(request.query_params.get('count', 0))  # FIX
+
         sections = HomeSection.objects.all().order_by("order")
-        serializer = HomeSectionSerializer(sections, many=True)
+
+        serializer = HomeSectionSerializer(
+            sections,
+            many=True,
+            context={"count": count}  # PASS count
+        )
+
         return Response(serializer.data)
-    

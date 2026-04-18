@@ -17,13 +17,23 @@ class SectionProductSerializer(serializers.ModelSerializer):
 
 
 class HomeSectionSerializer(serializers.ModelSerializer):
-    products = SectionProductSerializer(
-        source="sectionproduct_set", many=True
-    )
+    products = serializers.SerializerMethodField()
 
     class Meta:
         model = HomeSection
         fields = ["id", "title", "order", "products"]
-    
+
+    def get_products(self, obj):
+        count = self.context.get("count", 0)
+
+        qs = obj.sectionproduct_set.all()
+
+        if count > 0:
+            qs = qs[:count]
+
+        return HomeProductSerializer(
+            [sp.product for sp in qs],
+            many=True
+        ).data
 
 
