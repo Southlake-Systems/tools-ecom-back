@@ -15,7 +15,7 @@ class AddProductsToSectionView(APIView):
 
         section_id = data.get("section_id")
         product_ids = data.get("product_ids", [])
-
+        print(section_id)
         if not isinstance(product_ids, list) or not product_ids:
             raise ValidationError({"product_ids": "Must be a non-empty list"})
 
