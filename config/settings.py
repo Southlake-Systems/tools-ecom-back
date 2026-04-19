@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG") == "True"
 USE_S3 = os.getenv("USE_S3", "False") == "True"
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost","192.168.1.4","10.60.121.48","0.0.0.0"]
 CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
 
@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'product',
     'brands',
     'homepage',
+    'catalogure',
 ]
 
 

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Cataloguer</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f2f2f2;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .top-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #333;
+      color: white;
+      cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 8px;
+      text-align: center;
+      position: relative;
+    }
+
+    .card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .label {
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    .retake {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.7);
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .save-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px;
+      font-size: 16px;
+      background: #007bff;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Product Cataloguer</h1>
+
+  <div class="top-bar">
+    <input id="productId" placeholder="PRODUCT ID" />
+    <button onclick="getId()">GET ID</button>
+  </div>
+
+  <div class="grid" id="imageGrid"></div>
+
+  <button class="save-btn" onclick="saveImages()">SAVE</button>
+
+<script>
+  const imageGrid = document.getElementById("imageGrid");
+  const images = new Array(5).fill(null);
+
+  // Create 5 slots
+  for (let i = 0; i < 5; i++) {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <img id="img${i}" src="https://via.placeholder.com/150?text=IMG${i+1}" />
+      <div class="label">IMG${i+1}</div>
+      <button class="retake" onclick="triggerInput(${i})">📷</button>
+      <input type="file" accept="image/*" capture="environment" id="file${i}" onchange="handleFile(event, ${i})">
+    `;
+
+    imageGrid.appendChild(card);
+  }
+
+  function triggerInput(index) {
+    document.getElementById(`file${index}`).click();
+  }
+
+  function handleFile(event, index) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    images[index] = file;
+
+    const preview = URL.createObjectURL(file);
+    document.getElementById(`img${index}`).src = preview;
+  }
+
+  async function getId() {
+    try {
+      const res = await fetch("/product/get/id");
+      const data = await res.json();
+
+      document.getElementById("productId").value = data.id;
+    } catch (err) {
+      alert("Failed to fetch ID");
+    }
+  }
+
+  async function saveImages() {
+    const productId = document.getElementById("productId").value;
+
+    if (!productId) {
+      alert("Enter or generate product ID");
+      return;
+    }
+
+    if (images.includes(null)) {
+      alert("Please capture all 5 images");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("product_id", productId);
+
+    images.forEach((img, i) => {
+      formData.append(`image_${i+1}`, img);
+    });
+
+    try {
+      const res = await fetch("/catalogure/product/save-images/", {
+        method: "POST",
+        body: formData
+      });
+
+      if (res.ok) {
+        alert("Saved successfully");
+      } else {
+        alert("Save failed");
+      }
+    } catch (err) {
+      alert("Error saving images");
+    }
+  }
+</script>
+
+</body>
+</html>
