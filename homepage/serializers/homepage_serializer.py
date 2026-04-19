@@ -28,12 +28,13 @@ class HomeSectionSerializer(serializers.ModelSerializer):
 
         qs = obj.sectionproduct_set.all()
 
-        if count > 0:
+        if count:
             qs = qs[:count]
 
         return HomeProductSerializer(
             [sp.product for sp in qs],
-            many=True
+            many=True,
+            context=self.context  
         ).data
 
 

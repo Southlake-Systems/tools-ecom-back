@@ -14,7 +14,7 @@ class HomePageView(APIView):
         serializer = HomeSectionSerializer(
             sections,
             many=True,
-            context={"count": count}  # PASS count
+            context={"count": count,"request": request}  # PASS count  
         )
 
         return Response(serializer.data)
