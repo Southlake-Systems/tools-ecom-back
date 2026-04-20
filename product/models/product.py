@@ -12,6 +12,11 @@ class Product(models.Model):
     stock = models.IntegerField(default=0)
     category = models.CharField(max_length=100,default="nill")
     warranty = models.CharField(max_length=10,default=0)
+    img_original = models.ImageField(upload_to="products/original/",null=True,blank=True)
+    img_medium = models.ImageField(upload_to="products/medium/",null=True,blank=True)
+    img_thumbnail = models.ImageField(upload_to="products/thumbnail/",null=True,blank=True)
+    
+
 
     def __str__(self):
         return self.name
