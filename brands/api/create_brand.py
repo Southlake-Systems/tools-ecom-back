@@ -4,7 +4,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 from ..serializers.brand_serializer import BrandSerializers
-from django.core.files.storage import default_storage
+from ..tasks.process_cover_photos import process_brand_image
 
 class CreateNewBrand(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -14,6 +14,8 @@ class CreateNewBrand(APIView):
 
         if serializer.is_valid():
             brand = serializer.save()
+            process_brand_image.delay(brand.id)
+
             return Response({
                 "message": "created brand",
                 "brand_id": brand.id

@@ -30,6 +30,13 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost","192.168.1.4","10.60.121.48","0.0.0.0"
 CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
 
+#celery redis config
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+
+
+
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
