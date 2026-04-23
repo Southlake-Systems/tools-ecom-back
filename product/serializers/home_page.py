@@ -24,12 +24,36 @@ class HomeProductSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "brand",
-            "price", 
+            "price",
             "image",
         ]
 
-
-
     def get_image(self, obj):
-        image = obj.images.first()
-        return image.image.url if image else None
+
+        request = self.context.get("request")
+
+        # first product image
+        product_image = obj.images.first()
+
+        if not product_image:
+            return None
+
+        # get MID quality variant
+        variant = product_image.variants.filter(
+            quality="MID"
+        ).first()
+
+        # fallback to original image
+        if variant and variant.file:
+            url = variant.file.url
+
+        elif product_image.original:
+            url = product_image.original.url
+
+        else:
+            return None
+
+        if request:
+            return request.build_absolute_uri(url)
+
+        return url
