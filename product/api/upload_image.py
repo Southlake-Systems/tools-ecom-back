@@ -13,7 +13,6 @@ class BulkUploadProductImages(APIView):
     def post(self, request):
 
         product_id = request.data.get("product")
-        print(request.FILES)
         images = request.FILES.getlist("images")
 
         data = [
