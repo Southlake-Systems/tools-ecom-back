@@ -1,117 +1,274 @@
+# product/api/bulk_upload_products.py
+
+import pandas as pd
+
+from django.db import transaction
+from django.db.models import Q
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-import pandas as pd
-import random
-import string
+from rest_framework.parsers import MultiPartParser, FormParser
 
-from ..models.product import Product, Specifications
 from brands.models import Brand
+from ..models.product import (
+    Product,
+    ProductPrice,
+    Specifications,
+    Features,
+)
 
 
-def clean(value):
-    if pd.isna(value) or value == "":
-        return None
-    return str(value).strip()
+class BulkUploadProducts(APIView):
+    parser_classes = [MultiPartParser, FormParser]
 
+    """
+    Expected:
+    form-data
+    key: file
+    value: excel file (.xlsx or .xls)
 
-def generate_product_id(length=10):
-    chars = string.ascii_uppercase + string.digits
-    return ''.join(random.choices(chars, k=length))
+    Example columns:
 
+    name
+    brand
+    description
+    model_number
+    stock
+    category
+    warranty
 
-def generate_unique_product_id():
-    for _ in range(5):
-        pid = generate_product_id()
-        if not Product.objects.filter(id=pid).exists():
-            return pid
-    raise Exception("Failed to generate unique product ID")
+    mrp
+    selling_price
+    discount_rate
 
+    specification/Weight
+    specification/Power
+    specification/Voltage
 
-PRODUCT_FIELD_MAP = {
-    "Company": "brand",
-    "Category": "category",
-    "Product Name": "name",
-    "Model Number": "model_number",
-    "Warranty": "warranty",
-}
+    feature/Portable
+    feature/Waterproof
+    """
 
+    REQUIRED_COLUMNS = ["name", "brand"]
 
-class BulkProductUpload(APIView):
+    PRODUCT_FIELDS = {
+        "name",
+        "description",
+        "model_number",
+        "stock",
+        "category",
+        "warranty",
+    }
 
     def post(self, request):
-        file = request.FILES.get("file")
 
-        if not file:
-            return Response({"error": "No file uploaded"}, status=400)
+        excel_file = request.FILES.get("file")
+
+        if not excel_file:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Excel file is required"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
-            df = pd.read_excel(file)
+            df = pd.read_excel(excel_file)
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "message": f"Invalid excel file: {str(e)}"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-            created_count = 0
-            errors = []
+        df.columns = [str(col).strip() for col in df.columns]
 
-            for index, row in df.iterrows():
-                try:
-                    # -------------------------
-                    # 1. Product Data
-                    # -------------------------
-                    product_data = {}
+        missing_columns = [
+            col for col in self.REQUIRED_COLUMNS
+            if col not in df.columns
+        ]
 
-                    for excel_col, model_field in PRODUCT_FIELD_MAP.items():
-                        value = clean(row.get(excel_col))
-                        if value is not None:
-                            if model_field == "brand":
-                                brand_obj, _ = Brand.objects.get_or_create(name=value)
-                                product_data["brand"] = brand_obj
-                            else:
-                                product_data[model_field] = value
+        if missing_columns:
+            return Response(
+                {
+                    "success": False,
+                    "message": f"Missing required columns: {missing_columns}"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-                    if not product_data.get("name"):
-                        raise Exception("Missing product name")
+        created_products = []
+        errors = []
 
-                    product_data["id"] = generate_unique_product_id()
-                    product_data["stock"] = 0
+        for index, row in df.iterrows():
 
-                    # -------------------------
-                    # 2. Save Product
-                    # -------------------------
+            row_number = index + 2  # excel row number
+
+            try:
+
+                name = self.clean_value(row.get("name"))
+                brand_name = self.clean_value(row.get("brand"))
+
+                if not name:
+                    errors.append({
+                        "row": row_number,
+                        "error": "Product name is required"
+                    })
+                    continue
+
+                if not brand_name:
+                    errors.append({
+                        "row": row_number,
+                        "error": "Brand is required"
+                    })
+                    continue
+
+                brand = Brand.objects.filter(
+                    name__iexact=brand_name
+                ).first()
+
+                if not brand:
+                    errors.append({
+                        "row": row_number,
+                        "error": f"Brand '{brand_name}' does not exist"
+                    })
+                    continue
+
+                with transaction.atomic():
+
+                    product_data = {
+                        "brand": brand
+                    }
+
+                    for field in self.PRODUCT_FIELDS:
+
+                        if field in row:
+
+                            value = self.clean_value(row.get(field))
+
+                            if value is not None:
+                                product_data[field] = value
+
                     product = Product.objects.create(**product_data)
 
                     # -------------------------
-                    # 3. Specifications
+                    # Create Product Price
                     # -------------------------
-                    specs = []
 
-                    for col in df.columns:
-                        if col not in PRODUCT_FIELD_MAP:
-                            value = clean(row.get(col))
+                    mrp = self.clean_value(row.get("mrp"))
+                    selling_price = self.clean_value(
+                        row.get("selling_price")
+                    )
+                    discount_rate = self.clean_value(
+                        row.get("discount_rate")
+                    )
 
-                            if value is not None:
-                                specs.append(
-                                    Specifications(
-                                        product=product,  # keep if your field name is capitalized
-                                        name=col,
-                                        spec=value
-                                    )
+                    if (
+                        mrp is not None or
+                        selling_price is not None or
+                        discount_rate is not None
+                    ):
+                        ProductPrice.objects.create(
+                            product=product,
+                            mrp=mrp or 0,
+                            selling_price=selling_price or 0,
+                            discount_rate=discount_rate or 0,
+                        )
+
+                    # -------------------------
+                    # Specifications
+                    # -------------------------
+
+                    for column in df.columns:
+
+                        if column.startswith("specification/"):
+
+                            spec_name = (
+                                column.replace(
+                                    "specification/",
+                                    ""
+                                ).strip()
+                            )
+
+                            spec_value = self.clean_value(
+                                row.get(column)
+                            )
+
+                            if spec_value:
+
+                                Specifications.objects.create(
+                                    product=product,
+                                    name=spec_name,
+                                    spec=str(spec_value)
                                 )
 
-                    if specs:
-                        Specifications.objects.bulk_create(specs)
+                    # -------------------------
+                    # Features
+                    # -------------------------
 
-                    created_count += 1
+                    for column in df.columns:
 
-                except Exception as e:
-                    errors.append({
-                        "row": int(index) + 2,
-                        "error": str(e)
+                        if column.startswith("feature/"):
+
+                            feature_name = (
+                                column.replace(
+                                    "feature/",
+                                    ""
+                                ).strip()
+                            )
+
+                            feature_value = self.clean_value(
+                                row.get(column)
+                            )
+
+                            """
+                            If column has any value,
+                            feature gets added.
+                            """
+
+                            if feature_value:
+
+                                Features.objects.create(
+                                    product=product,
+                                    name=feature_name
+                                )
+
+                    created_products.append({
+                        "id": product.id,
+                        "name": product.name
                     })
 
-            return Response({
-                "created": created_count,
-                "failed": len(errors),
-                "errors": errors[:10]
-            })
+            except Exception as e:
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+                errors.append({
+                    "row": row_number,
+                    "error": str(e)
+                })
+
+        return Response(
+            {
+                "success": True,
+                "created_count": len(created_products),
+                "failed_count": len(errors),
+                "created_products": created_products,
+                "errors": errors,
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+    def clean_value(self, value):
+
+        if pd.isna(value):
+            return None
+
+        if isinstance(value, str):
+            value = value.strip()
+
+            if value == "":
+                return None
+
+        return value
