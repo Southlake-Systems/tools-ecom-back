@@ -4,7 +4,6 @@ from brands.models import Brand
 # Create your models here.
 
 class Product(models.Model):
-    id = models.CharField(max_length=100,primary_key=True)
     name = models.CharField(max_length=300)
     brand = models.ForeignKey(Brand,on_delete=models.CASCADE,related_name="products") 
     description = models.TextField(max_length=300,blank=True,default="None",null=True)
@@ -12,10 +11,13 @@ class Product(models.Model):
     stock = models.IntegerField(default=0)
     category = models.CharField(max_length=100,default="nill")
     warranty = models.CharField(max_length=10,default=0)
-    img_original = models.ImageField(upload_to="products/original/",null=True,blank=True)
-    img_medium = models.ImageField(upload_to="products/medium/",null=True,blank=True)
-    img_thumbnail = models.ImageField(upload_to="products/thumbnail/",null=True,blank=True)
-    
+    thumbnail = models.ForeignKey(
+        "ProductImage",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+"
+    )
 
 
     def __str__(self):
@@ -51,22 +53,30 @@ class ProductPrice(models.Model):
         return f"{self.product.name} Price"
 
 
-class ProductImage(models.Model):
-    QUALITY_CHOICES = [
-        ("LOW", "Low Quality"),
-        ("HIGH", "High Quality"),
-    ]
 
+
+
+class ProductImage(models.Model):
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
         related_name="images"
     )
+    original = models.ImageField(upload_to="products/original/", null=True,blank=True)
+    is_processed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True,null=True)
 
-    image = models.ImageField(upload_to="products/")
-    
-    position = models.IntegerField()  # 1 to 5
+class ProductImageVariant(models.Model):
+    QUALITY_CHOICES = [
+        ("LOW", "low"),
+        ("MID", "mid"),
+        ("HIGH", "high"),
+    ]
+
+    image = models.ForeignKey(
+        ProductImage,
+        on_delete=models.CASCADE,
+        related_name="variants"
+    )
+    file = models.ImageField(upload_to="products/variants/")
     quality = models.CharField(max_length=10, choices=QUALITY_CHOICES)
-
-    class Meta:
-        unique_together = ("product", "position", "quality")
