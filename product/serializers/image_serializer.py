@@ -14,3 +14,4 @@ class ImageSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return ProductImage.objects.create(**validated_data)
+    
