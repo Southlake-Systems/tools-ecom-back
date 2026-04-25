@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from ..models.product import Product, ProductPrice, ProductImage
 from brands.models import Brand
-
+from .product_serializer import FeatureSerializer,SpecificationSerializer
 
 
 
@@ -16,6 +16,8 @@ class BrandSerializers(serializers.ModelSerializer):
         fields = ["name"]
 
 class ProductPageSerializer(serializers.ModelSerializer):
+    specification = SpecificationSerializer(many=True,read_only=True)
+    features = FeatureSerializer(many=True,read_only=True)
     price = ProductPriceSerializer(read_only=True)
     brand = BrandSerializers(read_only=True)
     image = serializers.SerializerMethodField()
@@ -27,6 +29,8 @@ class ProductPageSerializer(serializers.ModelSerializer):
             "name",
             "brand",
             "price",
+            "features",
+            "specification",
             "image",
         ]
 
