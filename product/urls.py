@@ -7,7 +7,7 @@ from .api.upload_image import BulkUploadProductImages
 from .api.product_image_update import ProductImageDetailAPIView
 from .api.product_live_search import ProductLiveSearch
 from .api.product_search import ProductSearchView
-
+from .api.product_list import ProductListView
 
 urlpatterns = [
     path('add/',AddProduct.as_view(), name="add product"),
@@ -18,7 +18,7 @@ urlpatterns = [
     path('search/',ProductSearchView.as_view(), name="productsearch"),
     path("product-images/<int:id>/",ProductImageDetailAPIView.as_view()),
     path('<int:product_id>/',ProductPageView.as_view(), name="home-page-view"),
-    
+    path('',ProductListView.as_view(), name="product list view"),
 
 
 ]
