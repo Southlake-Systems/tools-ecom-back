@@ -28,10 +28,15 @@ class ProductPageSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "brand",
+            "description",
+            "model_number",
+            "stock",
             "price",
+            "category",
+            "warranty",
             "features",
             "specification",
-            "image",
+            "image"
         ]
 
     def get_image(self, obj):
