@@ -21,7 +21,7 @@ class HomeSectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HomeSection
-        fields = ["id", "title", "order", "products"]
+        fields = ["id", "title", "order","is_active", "products"]
 
     def get_products(self, obj):
         count = self.context.get("count", 0)

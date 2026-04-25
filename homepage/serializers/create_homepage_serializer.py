@@ -5,7 +5,7 @@ from ..models import HomeSection
 class HomeSectionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeSection
-        fields = ["id", "title", "order"]
+        fields = ["id", "title", "order","is_active"]
 
 
 
