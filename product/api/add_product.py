@@ -4,7 +4,6 @@ from rest_framework import status
 from ..models.product import Product
 from ..serializers.product_serializer import ProductSerializer
 
-
 class AddProduct(APIView):
 
     def post(self, request):
