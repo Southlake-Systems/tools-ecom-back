@@ -10,7 +10,10 @@ class Product(models.Model):
     model_number = models.CharField(max_length=200,blank=True,default="None",null=True)
     stock = models.IntegerField(default=0)
     category = models.CharField(max_length=100,default="nill")
-    warranty = models.CharField(max_length=10,default=0)
+    warranty = models.CharField(
+    max_length=100,
+    default="No Warranty"
+)
     thumbnail = models.ForeignKey(
         "ProductImage",
         null=True,
@@ -78,5 +81,18 @@ class ProductImageVariant(models.Model):
         on_delete=models.CASCADE,
         related_name="variants"
     )
-    file = models.ImageField(upload_to="products/variants/")
-    quality = models.CharField(max_length=10, choices=QUALITY_CHOICES)
+
+    file = models.ImageField(
+        upload_to="products/variants/"
+    )
+
+    jpg_file = models.ImageField(
+        upload_to="products/variants_jpg/",
+        null=True,
+        blank=True
+    )
+
+    quality = models.CharField(
+        max_length=10,
+        choices=QUALITY_CHOICES
+    )

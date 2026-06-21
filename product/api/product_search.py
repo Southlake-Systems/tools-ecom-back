@@ -35,7 +35,7 @@ class ProductSearchView(APIView):
             .annotate(
                 rank=SearchRank(vector, query)
             )
-            .filter(rank__gte=0.1)
+            .filter(rank__gte=0.1)  
             .select_related("brand")
             .prefetch_related("images")
             .order_by("-rank")[:20]

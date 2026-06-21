@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models.product import Product, Specifications, Features
+from ..models.product import Product, Specifications, Features, ProductPrice
 
 
 class SpecificationSerializer(serializers.ModelSerializer):
@@ -14,16 +14,26 @@ class FeatureSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
+class ProductPriceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductPrice
+        fields = ["mrp", "selling_price", "discount_rate"]
+
+
 class ProductSerializer(serializers.ModelSerializer):
 
     specifications = SpecificationSerializer(
         source="specification",
-        many=True
+        many=True,
+        required=False
     )
 
     features = FeatureSerializer(
-        many=True
+        many=True,
+        required=False
     )
+
+    price = ProductPriceSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Product
@@ -38,12 +48,18 @@ class ProductSerializer(serializers.ModelSerializer):
             "warranty",
             "features",
             "specifications",
+            "price",
         ]
+        extra_kwargs = {
+            "brand": {"required": True},
+            "name": {"required": True},
+        }
 
     def create(self, validated_data):
 
         specifications_data = validated_data.pop("specification", [])
         features_data = validated_data.pop("features", [])
+        price_data = validated_data.pop("price", None)
 
         product = Product.objects.create(**validated_data)
 
@@ -59,12 +75,19 @@ class ProductSerializer(serializers.ModelSerializer):
                 **feature
             )
 
+        if price_data:
+            ProductPrice.objects.create(
+                product=product,
+                **price_data
+            )
+
         return product
 
     def update(self, instance, validated_data):
 
         specifications_data = validated_data.pop("specification", None)
         features_data = validated_data.pop("features", None)
+        price_data = validated_data.pop("price", None)
 
         # update product fields
         for key, value in validated_data.items():
@@ -91,5 +114,12 @@ class ProductSerializer(serializers.ModelSerializer):
                     product=instance,
                     **feature
                 )
+
+        # update price
+        if price_data is not None:
+            ProductPrice.objects.update_or_create(
+                product=instance,
+                defaults=price_data
+            )
 
         return instance

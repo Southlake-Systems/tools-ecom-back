@@ -27,6 +27,7 @@ urlpatterns = [
     path('brand/',include('brands.urls')),
     path('home/',include('homepage.urls')),
     path('catalogure/',include('catalogure.urls')),
+    path('whatsapp/',include('whatsapp.urls')),
 
 
 ]

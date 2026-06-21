@@ -19,7 +19,7 @@ class AddProduct(APIView):
         product_instance = Product.objects.filter(id=data.get("id")).first()
 
         if product_instance:
-            serializer = ProductSerializer(product_instance, data=data)
+            serializer = ProductSerializer(product_instance, data=data, partial=True)
         else:
             serializer = ProductSerializer(data=data)
 
@@ -30,4 +30,7 @@ class AddProduct(APIView):
                 "product_id": product.id
             }, status=status.HTTP_200_OK)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )

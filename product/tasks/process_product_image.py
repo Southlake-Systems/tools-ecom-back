@@ -62,7 +62,7 @@ def process_product_images(self, product_id):
 
                 resized.save(
                     buffer,
-                    format="WEBP",
+                    format="JPEG",
                     quality=quality,
                     optimize=True
                 )
@@ -77,7 +77,7 @@ def process_product_images(self, product_id):
                 filename = (
                     f"product_{product_image.product.id}/"
                     f"{quality_name.lower()}/"
-                    f"{original_name}.webp"
+                    f"{original_name}.jpg"
                 )
 
                 # Create variant object
