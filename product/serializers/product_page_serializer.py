@@ -42,29 +42,21 @@ class ProductPageSerializer(serializers.ModelSerializer):
     def get_image(self, obj):
 
         request = self.context.get("request")
+        result = []
 
-        # first product image
-        product_image = obj.images.first()
+        for product_image in obj.images.all():
+            variant = product_image.variants.filter(quality="MID").first()
 
-        if not product_image:
-            return None
+            if variant and variant.file:
+                url = variant.file.url
+            elif product_image.original:
+                url = product_image.original.url
+            else:
+                continue
 
-        # get MID quality variant
-        variant = product_image.variants.filter(
-            quality="MID"
-        ).first()
+            if request:
+                url = request.build_absolute_uri(url)
 
-        # fallback to original image
-        if variant and variant.file:
-            url = variant.file.url
+            result.append({"id": product_image.id, "url": url})
 
-        elif product_image.original:
-            url = product_image.original.url
-
-        else:
-            return None
-
-        if request:
-            return request.build_absolute_uri(url)
-
-        return url
+        return result
