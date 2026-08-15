@@ -8,6 +8,8 @@ from .models import (
     ProductPrice,
     ProductImage,
     ProductImageVariant,
+    Category,
+    ProductCategory,
 )
 
 
@@ -38,19 +40,23 @@ class ProductImageInline(admin.StackedInline):
     show_change_link = True
 
 
+class ProductCategoryInline(admin.TabularInline):
+    model = ProductCategory
+    extra = 1
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "name",
         "brand",
-        "category",
         "stock",
     )
 
     list_filter = (
         "brand",
-        "category",
+        "categories",
     )
 
     search_fields = (
@@ -62,6 +68,7 @@ class ProductAdmin(admin.ModelAdmin):
     readonly_fields = ()
 
     inlines = [
+        ProductCategoryInline,
         ProductPriceInline,
         SpecificationsInline,
         FeaturesInline,
@@ -75,7 +82,6 @@ class ProductAdmin(admin.ModelAdmin):
                 "fields": (
                     "name",
                     "brand",
-                    "category",
                     "description",
                     "model_number",
                 )
@@ -153,6 +159,32 @@ class FeaturesAdmin(admin.ModelAdmin):
     search_fields = (
         "product__name",
         "name",
+    )
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "name",
+    )
+
+    search_fields = (
+        "name",
+    )
+
+
+@admin.register(ProductCategory)
+class ProductCategoryAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "product",
+        "category",
+    )
+
+    search_fields = (
+        "product__name",
+        "category__name",
     )
 
 

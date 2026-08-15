@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from ..models.product import Product, Specifications, Features, ProductPrice
+from ..models.category import Category
+from .category_serializer import CategorySerializer
 
 
 class SpecificationSerializer(serializers.ModelSerializer):
@@ -35,6 +37,16 @@ class ProductSerializer(serializers.ModelSerializer):
 
     price = ProductPriceSerializer(required=False, allow_null=True)
 
+    categories = CategorySerializer(many=True, read_only=True)
+
+    category_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        write_only=True,
+        required=False,
+        source="categories",
+        queryset=Category.objects.all(),
+    )
+
     class Meta:
         model = Product
         fields = [
@@ -44,7 +56,8 @@ class ProductSerializer(serializers.ModelSerializer):
             "description",
             "model_number",
             "stock",
-            "category",
+            "categories",
+            "category_ids",
             "warranty",
             "features",
             "specifications",
@@ -60,6 +73,7 @@ class ProductSerializer(serializers.ModelSerializer):
         specifications_data = validated_data.pop("specification", [])
         features_data = validated_data.pop("features", [])
         price_data = validated_data.pop("price", None)
+        categories_data = validated_data.pop("categories", None)
 
         product = Product.objects.create(**validated_data)
 
@@ -81,6 +95,9 @@ class ProductSerializer(serializers.ModelSerializer):
                 **price_data
             )
 
+        if categories_data is not None:
+            product.categories.set(categories_data)
+
         return product
 
     def update(self, instance, validated_data):
@@ -88,12 +105,17 @@ class ProductSerializer(serializers.ModelSerializer):
         specifications_data = validated_data.pop("specification", None)
         features_data = validated_data.pop("features", None)
         price_data = validated_data.pop("price", None)
+        categories_data = validated_data.pop("categories", None)
 
         # update product fields
         for key, value in validated_data.items():
             setattr(instance, key, value)
 
         instance.save()
+
+        # replace categories
+        if categories_data is not None:
+            instance.categories.set(categories_data)
 
         # replace specifications
         if specifications_data is not None:

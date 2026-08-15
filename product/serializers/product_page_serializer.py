@@ -2,6 +2,7 @@ from rest_framework import serializers
 from ..models.product import Product, ProductPrice, ProductImage
 from brands.models import Brand
 from .product_serializer import FeatureSerializer,SpecificationSerializer
+from .category_serializer import CategorySerializer
 
 
 
@@ -20,6 +21,7 @@ class ProductPageSerializer(serializers.ModelSerializer):
     features = FeatureSerializer(many=True,read_only=True)
     price = ProductPriceSerializer(read_only=True)
     brand = BrandSerializers(read_only=True)
+    categories = CategorySerializer(many=True, read_only=True)
     image = serializers.SerializerMethodField()
 
     class Meta:
@@ -32,7 +34,7 @@ class ProductPageSerializer(serializers.ModelSerializer):
             "model_number",
             "stock",
             "price",
-            "category",
+            "categories",
             "warranty",
             "features",
             "specification",

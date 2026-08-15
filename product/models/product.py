@@ -9,7 +9,12 @@ class Product(models.Model):
     description = models.TextField(max_length=300,blank=True,default="None",null=True)
     model_number = models.CharField(max_length=200,blank=True,default="None",null=True)
     stock = models.IntegerField(default=0)
-    category = models.CharField(max_length=100,default="nill")
+    categories = models.ManyToManyField(
+        "Category",
+        through="ProductCategory",
+        related_name="products",
+        blank=True,
+    )
     warranty = models.CharField(
     max_length=100,
     default="No Warranty"

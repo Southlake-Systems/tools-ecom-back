@@ -17,6 +17,7 @@ from ..models.product import (
     Specifications,
     Features,
 )
+from ..models.category import Category
 
 
 class BulkUploadProducts(APIView):
@@ -57,7 +58,6 @@ class BulkUploadProducts(APIView):
         "description",
         "model_number",
         "stock",
-        "category",
         "warranty",
     }
 
@@ -154,6 +154,19 @@ class BulkUploadProducts(APIView):
                                 product_data[field] = value
 
                     product = Product.objects.create(**product_data)
+
+                    # -------------------------
+                    # Category
+                    # -------------------------
+
+                    category_name = self.clean_value(row.get("category"))
+
+                    if category_name:
+                        category, _ = Category.objects.get_or_create(
+                            name__iexact=category_name,
+                            defaults={"name": category_name}
+                        )
+                        product.categories.add(category)
 
                     # -------------------------
                     # Create Product Price

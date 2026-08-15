@@ -3,6 +3,7 @@ from django.db import transaction
 
 from brands.models import Brand
 from ..models.product import Product, ProductPrice, Specifications, Features
+from ..models.category import Category
 from ..models.import_job import ImportJob
 
 
@@ -30,7 +31,7 @@ def _clean(value):
     return value
 
 
-PRODUCT_FIELDS = {"name", "description", "model_number", "stock", "category", "warranty"}
+PRODUCT_FIELDS = {"name", "description", "model_number", "stock", "warranty"}
 
 
 def process_row(row, row_number: int, brand_cache: dict, columns, dry_run: bool = False) -> dict:
@@ -80,6 +81,15 @@ def process_row(row, row_number: int, brand_cache: dict, columns, dry_run: bool 
         else:
             product_data["name"] = name
             product = Product.objects.create(**product_data)
+
+        # Category
+        category_name = _clean(row.get("category"))
+        if category_name:
+            category, _ = Category.objects.get_or_create(
+                name__iexact=category_name,
+                defaults={"name": category_name},
+            )
+            product.categories.add(category)
 
         # Price
         mrp           = _clean(row.get("mrp"))

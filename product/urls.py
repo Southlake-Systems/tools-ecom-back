@@ -16,9 +16,15 @@ from .api.import_job_views import (
     ImportJobDetailView,
 )
 from .api.product_detail import ProductDetailView, ProductManageView
+from .api.category_list_create import CategoryListCreateView
+from .api.category_detail import CategoryDetailView
+from .api.category_products import CategoryProductsView
 
 urlpatterns = [
     path('add/', AddProduct.as_view(), name="add product"),
+    path('category/', CategoryListCreateView.as_view(), name="category list create"),
+    path('category/<int:category_id>/', CategoryDetailView.as_view(), name="category detail"),
+    path('category/<int:category_id>/products/', CategoryProductsView.as_view(), name="category products"),
     path('images/upload/', BulkUploadProductImages.as_view(), name="upload product image"),
     path('get/id', GetProdID.as_view(), name="get product id"),
     path('bulk-upload/', BulkUploadProducts.as_view(), name="bulk-upload"),
