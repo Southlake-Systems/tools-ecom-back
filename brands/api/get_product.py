@@ -13,16 +13,15 @@ class GetProdByBrand(APIView):
 
 
 
-    def post(self,request,brand_id):
+    def get(self,request,brand_id):
 
         brand_obj = get_object_or_404(Brand,id=brand_id)
-        print(brand_obj)
 
         product = Product.objects.filter(brand=brand_obj).select_related("price").prefetch_related(
-            Prefetch("images", queryset=ProductImage.objects.filter(position=1, quality="LOW"))
+            Prefetch("images", queryset=ProductImage.objects.prefetch_related("variants"))
         )
 
-        serializer = ProductSerializer(product, many=True)
+        serializer = ProductSerializer(product, many=True, context={"request": request})
 
 
         return Response({

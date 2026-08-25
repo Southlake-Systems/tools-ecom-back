@@ -25,5 +25,19 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
     def get_image(self, obj):
-        image = obj.images.first()
-        return image.image.url if image else None
+        product_image = obj.images.first()
+        if not product_image:
+            return None
+
+        variant = product_image.variants.filter(quality="LOW").first()
+        if variant and variant.file:
+            url = variant.file.url
+        elif product_image.original:
+            url = product_image.original.url
+        else:
+            return None
+
+        request = self.context.get("request")
+        if request:
+            url = request.build_absolute_uri(url)
+        return url
