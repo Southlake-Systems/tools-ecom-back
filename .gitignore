@@ -39,7 +39,7 @@ dist/
 .eggs/
 
 # uv (package manager)
-uv.lock
+# uv.lock is committed for reproducible Docker builds (uv sync --frozen)
 
 # Testing / coverage
 .coverage

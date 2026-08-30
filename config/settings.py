@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 import os
 from dotenv import load_dotenv
 
@@ -26,12 +27,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG") == "True"
 USE_S3 = os.getenv("USE_S3", "False") == "True"
-ALLOWED_HOSTS = ["127.0.0.1", "localhost","192.168.1.4","10.60.121.48","0.0.0.0",".ngrok-free.dev",]
-CORS_ALLOW_ALL_ORIGINS = True
+ALLOWED_HOSTS = [
+    "127.0.0.1", "localhost", "192.168.1.4", "10.60.121.48", "0.0.0.0",
+    ".ngrok-free.dev",
+    "api.yessaretools.com", ".yessaretools.com",
+]
+
+# --- Cross-origin / HTTPS ---
+# The SPA authenticates with a JWT in the Authorization header (not a session
+# cookie), so DRF does not run CSRF checks on the API. CSRF only matters for the
+# Django admin form at api.yessaretools.com itself, hence CSRF_TRUSTED_ORIGINS.
+CORS_ALLOW_ALL_ORIGINS = True  # API is read-open; writes still require a valid JWT
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://api.yessaretools.com",
+    "https://yessaretools.com",
+    "https://www.yessaretools.com",
+]
+
+# Trust the X-Forwarded-Proto header from the reverse proxy / load balancer.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # Application definition
 
 #celery redis config
-CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
@@ -51,6 +72,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'storages',
+    'accounts',
     'product',
     'brands',
     'homepage',
@@ -94,11 +116,17 @@ else:
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'accounts.permissions.IsAdminOrReadOnly',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -180,3 +208,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Behind the nginx TLS terminator in production.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

@@ -1,0 +1,79 @@
+name: yessare-api
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RUN_MIGRATIONS: "1"
+      DB_HOST: db
+      DB_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
+    volumes:
+      - media:/app/media
+      - static:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    expose:
+      - "8000"
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
+    command: ["celery", "-A", "config", "worker", "--loglevel=info"]
+    volumes:
+      - media:/app/media
+    depends_on:
+      - db
+      - redis
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/api.yessaretools.com.conf:/etc/nginx/conf.d/default.conf:ro
+      - static:/var/www/api/static:ro
+      - media:/var/www/api/media:ro
+      - ./deploy/certbot/www:/var/www/certbot:ro
+      - ./deploy/certbot/conf:/etc/letsencrypt:ro
+    depends_on:
+      - web
+
+volumes:
+  pgdata:
+  redisdata:
+  media:
+  static:

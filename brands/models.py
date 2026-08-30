@@ -10,6 +10,7 @@ class Brand(models.Model):
     image_thumbnail = models.ImageField(upload_to="brands/thumbnail/", null=True, blank=True)
     is_processed = models.BooleanField(default=False)
     favourite = models.BooleanField(default=False)
+    show_on_shop = models.BooleanField(default=True)
     description = models.TextField(blank=True, null=True)
 
     def __str__(self):

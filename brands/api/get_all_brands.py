@@ -10,6 +10,8 @@ class GetAllBrands(APIView):
     def get(self,request):
 
         brand_obj = Brand.objects.all()
+        if request.query_params.get("shop") == "true":
+            brand_obj = brand_obj.filter(show_on_shop=True)
         serializers = BrandSerializers(brand_obj, many=True,context={"request": request} )
         return(
             Response({

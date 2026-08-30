@@ -14,26 +14,36 @@ class ProductLiveSearch(APIView):
     def get(self, request):
 
         q = request.GET.get("q", "").strip()
+        brand = request.GET.get("brand", "").strip()
 
-        if len(q) < 2:
+        if len(q) < 2 and not brand:
             return Response([])
 
-        products = (
-            Product.objects
-            .annotate(
-                similarity=TrigramSimilarity(
-                    "name",
-                    q
+        products = Product.objects.all()
+
+        if brand:
+            products = products.filter(brand_id=brand)
+
+        if len(q) >= 2:
+            products = (
+                products
+                .annotate(
+                    similarity=TrigramSimilarity(
+                        "name",
+                        q
+                    )
                 )
+                .filter(
+                    Q(name__icontains=q) |
+                    Q(similarity__gt=0.15)
+                )
+                .order_by("-similarity")
             )
-            .filter(
-                Q(name__icontains=q) |
-                Q(similarity__gt=0.15)
-            )
-            .order_by("-similarity")
-            .only("id", "name")
-            [:10]
-        )
+        else:
+            products = products.order_by("name")
+
+        limit = 1000 if brand else 10
+        products = products.only("id", "name")[:limit]
 
         return Response([
             {
