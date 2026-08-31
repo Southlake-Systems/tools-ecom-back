@@ -31,6 +31,9 @@ services:
       DB_HOST: db
       DB_PORT: "5432"
       CELERY_BROKER_URL: redis://redis:6379/0
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-tools}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin@yessare}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-tools@yessaretools.com}
     volumes:
       - media:/app/media
       - static:/app/staticfiles

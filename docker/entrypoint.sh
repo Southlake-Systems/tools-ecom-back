@@ -15,6 +15,33 @@ fi
 if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
     echo "Running migrations..."
     python manage.py migrate --noinput
+
+    # Bootstrap a superuser if DJANGO_SUPERUSER_USERNAME/PASSWORD are set.
+    # Idempotent: creates the user once, otherwise resets its password.
+    if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
+        echo "Ensuring superuser '$DJANGO_SUPERUSER_USERNAME'..."
+        python manage.py shell <<'PYEOF'
+import os
+from django.contrib.auth import get_user_model
+
+U = get_user_model()
+username = os.environ["DJANGO_SUPERUSER_USERNAME"]
+password = os.environ["DJANGO_SUPERUSER_PASSWORD"]
+email = os.environ.get("DJANGO_SUPERUSER_EMAIL", "")
+
+user, created = U.objects.get_or_create(
+    username=username,
+    defaults={"email": email},
+)
+user.is_staff = True
+user.is_superuser = True
+if email:
+    user.email = email
+user.set_password(password)
+user.save()
+print("created" if created else "updated", "superuser", username)
+PYEOF
+    fi
 fi
 
 exec "$@"
