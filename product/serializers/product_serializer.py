@@ -39,6 +39,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
     categories = CategorySerializer(many=True, read_only=True)
 
+    image = serializers.SerializerMethodField()
+
     category_ids = serializers.PrimaryKeyRelatedField(
         many=True,
         write_only=True,
@@ -62,11 +64,35 @@ class ProductSerializer(serializers.ModelSerializer):
             "features",
             "specifications",
             "price",
+            "image",
         ]
         extra_kwargs = {
             "brand": {"required": True},
             "name": {"required": True},
         }
+
+    def get_image(self, obj):
+
+        request = self.context.get("request")
+
+        product_image = obj.images.first()
+
+        if not product_image:
+            return None
+
+        variant = product_image.variants.filter(quality="MID").first()
+
+        if variant and variant.file:
+            url = variant.file.url
+        elif product_image.original:
+            url = product_image.original.url
+        else:
+            return None
+
+        if request:
+            return request.build_absolute_uri(url)
+
+        return url
 
     def create(self, validated_data):
 
